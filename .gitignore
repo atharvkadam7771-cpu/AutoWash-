@@ -1,0 +1,14 @@
+# Node/React
+node_modules/
+dist/
+.env
+
+# Java/Maven
+target/
+*.class
+*.war
+
+# IDE files
+.vscode/
+.idea/
+*.iml
