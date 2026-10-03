@@ -2,19 +2,34 @@ import React from 'react'
 
 export default function About() {
   const specs = [
-    { id: 1, tag: "Tech Stack", title: "React.js Frontend", desc: "Delivers a fast, responsive user interface with immediate dynamic package estimation." },
-    
-    { id: 3, tag: "Database", title: "MySQL Relational DB", desc: "Persists user bookings, vehicle logs, and package pricing securely with ACID compliance." }
+    { 
+      id: 1, 
+      tag: "Platform", 
+      title: "What is AutoWash?", 
+      desc: "AutoWash is an on-demand doorstep vehicle wash and detailing system designed to eliminate the need to visit physical service centers or wait in long queues." 
+    },
+    { 
+      id: 2, 
+      tag: "Convenience", 
+      title: "Doorstep Execution", 
+      desc: "Users can easily select their vehicle type (car or bike), choose a professional cleaning package, and schedule a convenient time slot right at their home or office." 
+    },
+    { 
+      id: 3, 
+      tag: "Technology", 
+      title: "Full-Stack Architecture", 
+      desc: "Built with a fast, dynamic React.js frontend and supported by robust service workflows to ensure smooth appointment booking and management." 
+    }
   ]
 
   return (
     <div>
       <div className="banner-header">
         <h1>About AutoWash System</h1>
-        <p>Eliminating physical service station queues through automated doorstep vehicle care.</p>
+        <p>Simplifying vehicle care and detailing through on-demand doorstep scheduling.</p>
       </div>
 
-      <div className="section-title">Architecture & Specifications</div>
+      <div className="section-title">System Overview & Highlights</div>
 
       <div className="about-grid">
         {specs.map((item) => (
