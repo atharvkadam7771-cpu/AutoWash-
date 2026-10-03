@@ -14,11 +14,11 @@ export default function About() {
       title: "Doorstep Execution", 
       desc: "Users can easily select their vehicle type (car or bike), choose a professional cleaning package, and schedule a convenient time slot right at their home or office." 
     },
-    { 
+  { 
       id: 3, 
-      tag: "Technology", 
-      title: "Full-Stack Architecture", 
-      desc: "Built with a fast, dynamic React.js frontend and supported by robust service workflows to ensure smooth appointment booking and management." 
+      tag: "User Experience", 
+      title: "Instant Booking & Scheduling", 
+      desc: "Provides an interactive booking system where users can instantly select time slots, view transparent pricing, and receive immediate appointment confirmations." 
     }
   ]
 
