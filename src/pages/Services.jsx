@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import bikeImg from '../assets/bike.jpg'
 import carImg from '../assets/car.png'
@@ -16,6 +16,10 @@ export default function Services() {
   const navigate = useNavigate()
 
   const handleBook = (pkg) => {
+    // Logs the selected package details to the browser console for debuggin
+    console.log("Selected Package Data:", pkg)
+    
+    // Passes the package object to the booking page via React Router state
     navigate('/booking', { state: { package: pkg } })
   }
 

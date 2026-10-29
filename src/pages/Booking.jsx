@@ -1,133 +1,216 @@
 import React, { useState } from 'react'
-import { useLocation, useNavigate, Link } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function Booking() {
   const location = useLocation()
   const navigate = useNavigate()
-  const selectedPkg = location.state?.package
 
-  const [confirmed, setConfirmed] = useState(false)
-  const [formData, setFormData] = useState({
-    ownerName: '',
-    vehicleNumber: '',
-    phone: '',
-    address: '',
-    date: '',
-    slot: ''
-  })
-
-  if (!selectedPkg) {
-    return (
-      <div className="banner-header">
-        <h2>No Package Selected</h2>
-        <p>Please choose a cleaning package first before setting up an appointment.</p>
-        <Link to="/services" className="btn-cyan" style={{ marginTop: '16px' }}>
-          View Services
-        </Link>
-      </div>
-    )
+  // Selected package received from Services page
+  const selectedPackage = location.state?.package || {
+    name: "Quick Foam Wash (Bike)",
+    category: "Two-Wheeler",
+    price: 249,
+    desc: "Pressure wash, active foam shampoo, and tire polish."
   }
 
-  const handleSubmit = (e) => {
+  // Booking form state
+  const [formData, setFormData] = useState({
+    owner_name: '',
+    vehicle_number: '',
+    mobile_number: '',
+    service_address: '',
+    service_date: '',
+    time_slot: ''
+  })
+
+  const [loading, setLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
+
+  // Handle input changes
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  // Submit to Node/Express MySQL Backend
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // In full-stack architecture, this data is sent via fetch() to your Java Servlet backend
-    setConfirmed(true)
+    setErrorMsg('')
+
+    if (!formData.time_slot) {
+      setErrorMsg("Please select an available time slot!")
+      return
+    }
+
+    setLoading(true)
+
+    const bookingPayload = {
+      package_name: selectedPackage.name,
+      category: selectedPackage.category,
+      price: selectedPackage.price,
+      owner_name: formData.owner_name,
+      vehicle_number: formData.vehicle_number,
+      mobile_number: formData.mobile_number,
+      service_address: formData.service_address,
+      service_date: formData.service_date,
+      time_slot: formData.time_slot
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookingPayload)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccessMsg(`Booking confirmed! (Booking ID: ${data.bookingId})`)
+        setTimeout(() => {
+          navigate('/services')
+        }, 1500)
+      } else {
+        setErrorMsg(data.error || "Failed to book slot.")
+      }
+    } catch (err) {
+      console.error("Connection error:", err)
+      setErrorMsg("Unable to reach backend server on port 5000.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div style={{ maxWidth: '650px', margin: '0 auto' }}>
-      <div className="banner-header">
-        <h1>Confirm Doorstep Appointment</h1>
-        <p>Provide your vehicle and location details for technician dispatch.</p>
+    <div style={{ maxWidth: '650px', margin: '30px auto', padding: '24px', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      {/* Selected Package Details */}
+      <div style={{ borderBottom: '1px solid #e2e8f0', paddingBottom: '16px', marginBottom: '20px' }}>
+        <h2 style={{ margin: '0 0 6px 0', fontSize: '20px', color: '#0f172a' }}>{selectedPackage.name}</h2>
+        <span className="badge" style={{ backgroundColor: '#e0f2fe', color: '#0369a1', padding: '3px 8px', borderRadius: '4px', fontSize: '12px' }}>
+          {selectedPackage.category}
+        </span>
+        <p style={{ color: '#64748b', fontSize: '13px', margin: '8px 0' }}>{selectedPackage.desc}</p>
+        <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#0891b2' }}>₹{selectedPackage.price}</div>
       </div>
 
-      <div className="booking-card">
-        <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
-          <h3>{selectedPkg.name}</h3>
-          <span className="badge">{selectedPkg.category}</span>
-          <p className="card-desc" style={{ margin: '8px 0 0 0' }}>{selectedPkg.desc}</p>
-          <p className="price-tag" style={{ marginTop: '10px' }}>₹{selectedPkg.price}</p>
+      {/* Confirmation and Error Banners */}
+      {successMsg && (
+        <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#dcfce7', color: '#15803d', borderRadius: '6px', fontSize: '14px', fontWeight: '500', border: '1px solid #bbf7d0' }}>
+          ✓ {successMsg}
+        </div>
+      )}
+
+      {errorMsg && (
+        <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#fee2e2', color: '#b91c1c', borderRadius: '6px', fontSize: '14px', fontWeight: '500', border: '1px solid #fecaca' }}>
+          ⚠ {errorMsg}
+        </div>
+      )}
+
+      {/* Form Fields */}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#334155' }}>Owner Full Name</label>
+          <input
+            type="text"
+            name="owner_name"
+            required
+            placeholder="Enter your name"
+            value={formData.owner_name}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+          />
         </div>
 
-        {confirmed ? (
-          <div>
-            <div className="success-note">
-              Appointment successfully booked for {formData.ownerName} ({formData.vehicleNumber}) on {formData.date} at {formData.slot}!
-            </div>
-            <button className="btn-secondary" style={{ width: '100%', marginTop: '10px' }} onClick={() => navigate('/services')}>
-              Book Another Service
-            </button>
-          </div>
-        ) : (
-          <form className="booking-form" onSubmit={handleSubmit}>
-            <label>Owner Full Name</label>
-            <input 
-              type="text" 
-              placeholder="Enter your name" 
-              required 
-              value={formData.ownerName}
-              onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
-            />
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#334155' }}>Vehicle Number (e.g., MH 04 AB 1234)</label>
+          <input
+            type="text"
+            name="vehicle_number"
+            required
+            placeholder="Enter vehicle registration number"
+            value={formData.vehicle_number}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+          />
+        </div>
 
-            <label>Vehicle Number (e.g., MH 04 AB 1234)</label>
-            <input 
-              type="text" 
-              placeholder="Enter vehicle registration number" 
-              required 
-              value={formData.vehicleNumber}
-              onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })}
-            />
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#334155' }}>Mobile Number</label>
+          <input
+            type="tel"
+            name="mobile_number"
+            required
+            placeholder="Enter 10-digit mobile number"
+            value={formData.mobile_number}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+          />
+        </div>
 
-            <label>Mobile Number</label>
-            <input 
-              type="tel" 
-              placeholder="Enter 10-digit mobile number" 
-              required 
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#334155' }}>Doorstep Service Address</label>
+          <input
+            type="text"
+            name="service_address"
+            required
+            placeholder="House/Flat No, Street, Society, Landmark"
+            value={formData.service_address}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+          />
+        </div>
 
-            <label>Doorstep Service Address</label>
-            <input 
-              type="text" 
-              placeholder="House/Flat No, Street, Society, Landmark" 
-              required 
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            />
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#334155' }}>Service Date</label>
+          <input
+            type="date"
+            name="service_date"
+            required
+            value={formData.service_date}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+          />
+        </div>
 
-            <label>Service Date</label>
-            <input 
-              type="date" 
-              required 
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            />
+        <div>
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#334155' }}>Time Slot</label>
+          <select
+            name="time_slot"
+            required
+            value={formData.time_slot}
+            onChange={handleChange}
+            style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', boxSizing: 'border-box' }}
+          >
+            <option value="">Select Time Slot</option>
+            <option value="09:00 AM - 10:30 AM">09:00 AM - 10:30 AM</option>
+            <option value="11:00 AM - 12:30 PM">11:00 AM - 12:30 PM</option>
+            <option value="02:00 PM - 03:30 PM">02:00 PM - 03:30 PM</option>
+            <option value="04:00 PM - 05:30 PM">04:00 PM - 05:30 PM</option>
+          </select>
+        </div>
 
-            <label>Time Slot</label>
-            <select 
-              required 
-              value={formData.slot}
-              onChange={(e) => setFormData({ ...formData, slot: e.target.value })}
-            >
-              <option value="" disabled>Select Time Slot</option>
-              <option>08:00 AM - 10:00 AM</option>
-              <option>10:00 AM - 12:00 PM</option>
-              <option>02:00 PM - 04:00 PM</option>
-              <option>04:00 PM - 06:00 PM</option>
-            </select>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-              <button type="submit" className="btn-cyan" style={{ flex: 1 }}>
-                Confirm & Dispatch Technician
-              </button>
-              <button type="button" className="btn-secondary" onClick={() => navigate('/services')}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ flex: 1, padding: '12px', backgroundColor: '#0891b2', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            {loading ? "Saving to Database..." : "Confirm & Dispatch Technician"}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/services')}
+            style={{ padding: '12px 20px', backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
